@@ -30,8 +30,10 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 
 // Images
 import brandLogo from "assets/images/orange.bmp";
+import useAuth from "hooks/useAuth";
 
 export default function App() {
+  const { auth } = useAuth();
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, layout, openConfigurator, sidenavColor, darkMode } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
@@ -74,17 +76,17 @@ export default function App() {
       return null;
     });
 
-    // const getPrivateRoutes = (allRoutes) =>
-    // allRoutes.map((route) => {
-    //   if (route.collapse) {
-    //     return getPrivateRoutes(route.collapse);
-    //   }
+  const getPrivateRoutes = (allRoutes) =>
+    allRoutes.map((route) => {
+      if (route.collapse) {
+        return getPrivateRoutes(route.collapse);
+      }
 
-    //   if (route.route) {
-    //     return <Route exact path={route.route} element={route.component} key={route.key} />;
-    //   }
-    //   return null;
-    // });
+      if (route.route) {
+        return <Route exact path={route.route} element={route.component} key={route.key} />;
+      }
+      return null;
+    });
 
   const configsButton = (
     <MDBox
@@ -119,7 +121,7 @@ export default function App() {
             color={sidenavColor}
             brand={brandLogo}
             brandName="Bridge"
-            routes={protectedRoutes}
+            routes={auth.roles === "ROLE_USER" ? protectedRoutes : publicRoutes}
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
           />
@@ -129,7 +131,8 @@ export default function App() {
       )}
       {layout === "vr" && <Configurator />}
       <Routes>
-        {getRoutes(protectedRoutes)}
+        {auth.roles === "ROLE_USER" ? getPrivateRoutes(protectedRoutes) : getRoutes(publicRoutes)}
+
         {/* {getPrivateRoutes(protectedRoutes)} */}
         <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
       </Routes>
